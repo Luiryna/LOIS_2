@@ -1,0 +1,64 @@
+﻿
+body{
+    background-color: rgb(105, 99, 107);
+    font-family: 'Fredoka One', cursive;
+    margin-top: 50px;
+    font-size: 24px;
+    color: #a5a1a7;
+}
+.font-family{
+    font-family: 'Lobster', cursive;
+}
+
+.font-size{
+    font-size: 25px;
+}
+
+.text {
+    text-align:  center;
+   }
+
+input{
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(55, 75, 94, 0.06);
+    font-size: 18px;
+}
+
+input[type=text],input[type=number]{
+    border: 1px solid gray;
+    padding: 8px 8px;
+    text-decoration: none;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+input[type=number]{
+    width: 50px;
+}
+
+input[type=button]{
+    background-color: rgb(153, 88, 113);
+    border: none;
+    color: rgb(73, 60, 99);
+    padding: 8px 8px;
+    text-decoration: none;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.font-weight{
+    font-weight: 700;
+}
+
+.center {
+    margin: 0 auto;
+    padding: 10px;
+  }
+
+  button{
+    -moz-border-radius:  5px; /* Firefox */
+    -webkit-border-radius:  5px; /* Safari 4 */
+    border-radius:  5px; /* IE 9, Safari 5, Chrome */
+    font-size: 16px;
+    font-family: 'Fredoka One', cursive;
+  }
