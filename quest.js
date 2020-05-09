@@ -6,6 +6,7 @@ const CONJUNCTION = "&";
 const DISJUNCTION = "|";
 const IMPLICATION = "->";
 const EQUIVALENCE = "~";
+const FORMULA_REGEXP = new RegExp('([(]([A-Z]|[0-1])((->)|(&)|(\\|)|(~))([A-Z]|[0-1])[)])|([(][!]([A-Z]|[0-1])[)])|([A-Z])|([0-1])','g');
 
 let countAnswer = 0;
 let n = 1;
@@ -13,12 +14,44 @@ let n = 1;
 function checkInconsistency(formula) {
     // var input = document.getElementById("inputText").value;
     let obj = calculateTableTruth(formula);
-    if (countAnswer != n) {
-        // alert('противоречивая');
+
+    if (!checkWithRegularExpressionFormula(formula)) {
+        return false;
+    } else if (formula == '1') {
+        return false;
+    } else if (formula == '0') {
+        return false;
+    } else if (obj.containsOnes === true) {
         return true;
     } else {
-        // alert('непротиворечивая');
         return false;
+    }
+
+    // if (obj instanceof Object && obj.table !== undefined && checkWithRegularExpressionFormula(input)) {
+    //     printTableTruth(obj.table, obj.symbolSize);
+    //     document.getElementById("container").hidden = false;
+    // } else {
+    //     document.getElementById("container").hidden = true;
+    // }
+}
+
+function checkWithRegularExpressionFormula(formula) {
+    let form = formula;
+    if (form.length == 1 && form.match(/[A-Z]|[0-1]/)) {
+        return true;
+    } else {
+        while (true) {
+            let initLength = form.length;
+            form = form.replace(FORMULA_REGEXP, '1')
+            if (form.length === initLength) {
+                break;
+            }
+        }
+        if ((form.length === 1) && (form.match(/1/))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
@@ -28,56 +61,59 @@ function calculateTableTruth(formula) {
 
     if(formula == '0') {
         countAnswer = 1;
-        return null;
+        return {containsOnes: false};
     }
 
     if(formula == '1') {
-        return null;
+        return {containsOnes: true};
     }
 
     if (formula == '') {
         return null;
     }
 
-    let answer = formula;
-    let symbolInFormula = calculateFormulaSymbols(formula).sort();
-    let sizeSymbolInFormula = symbolInFormula.length;
-    n = Math.pow(2, sizeSymbolInFormula);
+    if (formula.match(/[A-Z]/g) !== null) {
+        let answer = formula;
+        let symbolInFormula = calculateFormulaSymbols(formula).sort();
+        let sizeSymbolInFormula = symbolInFormula.length;
+        n = Math.pow(2, sizeSymbolInFormula);
 
-    let table = {};
-    for (let index = 0; index < n; index++) {
-        let inputParameters = calculateInputFormulaParameters(index, sizeSymbolInFormula);
-        let obj = createFormulaWithParameters(symbolInFormula, inputParameters);
+        let table = {};
+        for (let index = 0; index < n; index++) {
+            let inputParameters = calculateInputFormulaParameters(index, sizeSymbolInFormula);
+            let obj = createFormulaWithParameters(symbolInFormula, inputParameters);
 
-        obj[answer] = getAnswer(formula, obj);
-        table[index] = obj;
+            obj[answer] = getAnswer(formula, obj);
+            table[index] = obj;
 
-        if (obj[answer] == 0) {
-            countAnswer++;
+            if (obj[answer] == 0) {
+                countAnswer++;
+            }
         }
+        var vals = Object.keys(table).map(function(key) {
+            return table[key][Object.keys(table[key])[Object.keys(table[key]).length - 1]];
+        });
+        let containsOnes = false;
+        if (vals.includes('1') && vals.includes('0')) {
+            containsOnes = true;
+        }
+        return  {
+            table: table,
+            symbolSize: sizeSymbolInFormula,
+            containsOnes: containsOnes
+        };
+    } else {
+        containsOnes = (calculateFormula(formula) === '1' ? true : false);
+        return {containsOnes: containsOnes};
     }
-
-    return  {
-        table: table,
-        symbolSize: sizeSymbolInFormula
-    }; 
 }
 
 function calculateFormulaSymbols(formula) {
     const SYMBOL_REGEXP = new RegExp('([A-Z])', "g");
     let results = formula.match(SYMBOL_REGEXP);
 
-    //удаляет повторяющиеся символы
-
-    for(let i = 0; i < results.length; i++) {
-        for(let j = i + 1; j < results.length; j++) {
-            if (results[i] == results[j]) {
-                results.splice(j, 1);
-                j--;
-            }
-        }
-    }
-    return results;
+    const a = [...new Set(results)];
+    return a;
 }
 
 //Функция расчета входных параметров для формулы
@@ -115,8 +151,9 @@ function getAnswer(formula, obj){
 
 function calculateFormula(formula) {
     const REGEXP = new RegExp("([(][" + NEGATION + "][0-1][)])|" + "([(][0-1]((" + CONJUNCTION + ")|("+ "\\" + DISJUNCTION + ")|(" + IMPLICATION + ")|(" + EQUIVALENCE + "))[0-1][)])");
-    while (REGEXP.exec(formula) != null) {
-        let subFormula = REGEXP.exec(formula)[0];
+    var array;
+    while ((array = REGEXP.exec(formula)) !== null) {
+        let subFormula = array[0];
         let result = calculateSimpleFormula(subFormula);
         formula = formula.replace(subFormula, result);
     }
@@ -270,9 +307,11 @@ function getRandomInt(max) {
 
 function generateFormula(countOfGroups, countOfArgs) {
     let formula = '';
+    var variablesCodes = [ 'A', 'B', 'C'];
+
 
     for (i = 0; i < countOfGroups; i++) {
-        let countOfArgsInParticualarGroup = countOfArgs - getRandomInt(countOfArgs) + 2;
+        let countOfArgsInParticualarGroup = countOfArgs - getRandomInt(countOfArgs) + 1;
         let group = '';
 
         if (countOfGroups !== 1 && i < countOfGroups - 1) {
